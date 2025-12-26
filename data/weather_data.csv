@@ -1,4 +1,4 @@
-time,temperature_2m_mean_C,temperature_2m_max_C,temperature_2m_min_C,apparent_temperature_mean_C,apparent_temperature_max_C,apparent_temperature_min_C,precipitation_sum_mm,wind_speed_10m_max_km_h,wind_gusts_10m_max_km_h,wind_direction_10m_dominant_degree,shortwave_radiation_sum_MJ_m_square,precipitation_hours_h,rain_sum_mm,snowfall_sum_cm
+admission_date,temperature_2m_mean_C,temperature_2m_max_C,temperature_2m_min_C,apparent_temperature_mean_C,apparent_temperature_max_C,apparent_temperature_min_C,precipitation_sum_mm,wind_speed_10m_max_km_h,wind_gusts_10m_max_km_h,wind_direction_10m_dominant_degree,shortwave_radiation_sum_MJ_m_square,precipitation_hours_h,rain_sum_mm,snowfall_sum_cm
 2020-01-01,15.9,21.3,11.1,11.8,17.9,7.0,0.00,20.2,29.9,89,12.15,0.0,0.00,0.00
 2020-01-02,19.2,26.6,13.6,15.5,22.4,8.7,0.00,26.6,43.6,181,14.93,0.0,0.00,0.00
 2020-01-03,21.0,27.6,15.4,18.4,25.4,12.0,0.00,20.0,29.2,217,14.89,0.0,0.00,0.00

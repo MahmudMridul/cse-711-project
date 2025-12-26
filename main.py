@@ -11,7 +11,6 @@ df = pd.read_csv(file)
 
 # info.get_categorical_data_info(df)
 
-days = df['admission_date'].str[:11].unique().tolist()
+df['admission_date'] = df['admission_date'].str[:10]
 
-
-info.print_list(days)
+df.to_csv('data/hospital_admission_no_timestamp.csv', index=False)
