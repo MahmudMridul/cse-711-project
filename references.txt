@@ -1,2 +1,5 @@
 Riyadh Hospital Admission https://www.kaggle.com/datasets/datasetengineer/riyadh-hospital-admissions-dataset-20202024
 Weather Data https://open-meteo.com/
+Restaurant Sales Data https://www.kaggle.com/datasets/rohitgrewal/restaurant-sales-data/data
+Hospital Admission Data https://www.kaggle.com/datasets/ashishsahani/hospital-admissions-data/data?select=table_headings.csv
+Paper https://www.sciencedirect.com/science/article/pii/S1319157822002336#b0070
