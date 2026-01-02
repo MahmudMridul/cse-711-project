@@ -5,7 +5,7 @@ from sklearn.feature_selection import mutual_info_regression, f_regression
 import utils
 
 
-df = pd.read_parquet(utils.FILE_V4)
+df = pd.read_parquet(utils.FILE_V5)
 
 # Target column
 target = df['length_of_stay']
@@ -110,8 +110,11 @@ results_df = results_df.drop('Abs_Pearson', axis=1)
 print("Relationship Analysis: length_of_stay vs Int32 Features\n")
 print(results_df.to_string(index=False))
 
+# Round to 5 decimal places before saving
+results_df_rounded = results_df.round(5)
+
 # Save to CSV
-results_df.to_csv('data/numeric_feature_relation_analysis.csv', index=False)
+results_df_rounded.to_csv('data/numeric_feature_relation_analysis.csv', index=False)
 
 # Summary of top features
 print("\n" + "="*80)

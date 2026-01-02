@@ -140,6 +140,7 @@ csv_df = csv_df.sort_values('Eta_Squared', ascending=False)
 
 # Write to CSV
 output_file = 'data/categorical_feature_relation_analysis.csv'
+csv_df = csv_df.round(5)
 csv_df.to_csv(output_file, index=False)
 
 print(f"\n\nResults saved to: {output_file}")
