@@ -2,3 +2,5 @@ hospital_inpatient_discharges.parquet - base file
 data_v1 - updated few column's data type from float64 to Int32
 data_v2 - dropped 'operating_certificate_number', 'facility_id', 'discharge_year'
 data_v3 - dropped categorical description columns -"ccs_diagnosis_description", "ccs_procedure_description", "apr_drg_description", "apr_mdc_description", "apr_severity_of_illness_description",
+data_v4 - convert total_charges and total_costs column to int32
+data_v5 - dropped total_charges and total_costs
