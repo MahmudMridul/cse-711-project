@@ -2,3 +2,4 @@
 __pycache__/
 *v*.csv
 data/hospital_inpatient_discharges.csv
+*v*.parquet
