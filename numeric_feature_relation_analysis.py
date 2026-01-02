@@ -5,14 +5,14 @@ from sklearn.feature_selection import mutual_info_regression, f_regression
 import utils
 
 
-df = pd.read_parquet(utils.FILE_DTYPE_UPDATED)
+df = pd.read_parquet(utils.FILE_V4)
 
 # Target column
 target = df['length_of_stay']
 
 # Get all Int32 columns (excluding target)
-int32_columns = df.select_dtypes(include=['Int32']).columns.tolist()
-
+int32_columns = df.select_dtypes(include=['Int32', 'int32']).columns.tolist()
+# print(int32_columns)
 
 # Initialize results dictionary
 results = {
