@@ -1,4 +1,11 @@
+FILE_BASE = 'data/hospital_inpatient_discharges.parquet'
+FILE_V1 = 'data/data_v1.parquet'
+FILE_V2 = 'data/data_v2.parquet'
+FILE_V3 = 'data/data_v3.parquet'
 LINE_SEPARATOR = '-' * 50
+INT_32_MAX = 2_147_483_647
+INT_32_MIN = -2_147_483_648
+
 
 def print_list(list):
     for item in list:
