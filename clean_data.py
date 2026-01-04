@@ -91,6 +91,23 @@ print("Dropped categorical description columns")
 df.drop(columns=['total_costs', 'total_charges'], axis=1, inplace=True)
 print("Dropped total_costs and total_charges columns")
 
-df.to_parquet('data/data_v5.parquet', index=False)
+# df.to_parquet('data/data_v5.parquet', index=False)
+
+'''Dropped gender, race, ethnicity, zip_code, health_service_area, apr_medical_surgical_description columns as these are not useful for prediction'''
+df.drop(
+    columns=[
+        "gender",
+        "race",
+        "ethnicity",
+        "zip_code",
+        "health_service_area",
+        "apr_medical_surgical_description",
+    ],
+    axis=1,
+    inplace=True,
+)
+print("Dropped gender, race, ethnicity, zip_code, health_service_area, apr_medical_surgical_description")
+
+df.to_parquet("data/data_v6.parquet", index=False)
 
 print(df.dtypes)
