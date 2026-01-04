@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 import xgboost as xgb
 import lightgbm as lgb
 from typing import Dict, List, Tuple
@@ -89,11 +89,13 @@ class FederatedClient:
                     max_depth=10,
                     random_state=42,
                     n_jobs=-1
-                )
-                
+                )    
             
             # Train model
-            model.fit(X_fold_train, y_fold_train)
+            if model_type == 'neural_network':
+                model.fit(X_fold_train, y_fold_train, epochs=50, batch_size=64)
+            else:
+                model.fit(X_fold_train, y_fold_train)
             
             # Validate
             y_pred = model.predict(X_fold_val)
@@ -124,7 +126,7 @@ class FederatedEnsemble:
         self.data = data
         self.facility_column = facility_column
         self.clients = {}
-        self.model_types = ['xgboost', 'lightgbm', 'random_forest']
+        self.model_types = ['xgboost', 'lightgbm', 'random_forest', 'neural_network']
         self.global_models = {model_type: [] for model_type in self.model_types}
         print("Federated Ensemble Initialized.")
         
@@ -214,12 +216,37 @@ class FederatedEnsemble:
         # Evaluate ensemble
         rmse = np.sqrt(mean_squared_error(y_test, ensemble_pred))
         mae = mean_absolute_error(y_test, ensemble_pred)
-        r2 = r2_score(y_test, ensemble_pred)
+        r2 = r2_score(y_test, pred)
         
         print(f"\nENSEMBLE (Average of all models):")
         print(f"  RMSE: {rmse:.4f}")
         print(f"  MAE:  {mae:.4f}")
         print(f"  R²:   {r2:.4f}")
+        
+        # Show accuracy for each individual model
+        print("\n" + "="*70)
+        print("INDIVIDUAL MODEL ACCURACY")
+        print("="*70)
+        
+        for model_type in self.model_types:
+            print(f"\n{model_type.upper()} - Individual Models:")
+            for idx, model in enumerate(self.global_models[model_type]):
+                pred = model.predict(X_test)
+                rmse = np.sqrt(mean_squared_error(y_test, pred))
+                mae = mean_absolute_error(y_test, pred)
+                r2 = r2_score(y_test, pred)
+                print(f"  Model {idx+1}: RMSE={rmse:.4f}, MAE={mae:.4f}, R²={r2:.4f}")
+        
+        # Show 10 sample predictions
+        print("\n" + "="*70)
+        print("SAMPLE PREDICTIONS (First 10 Test Cases)")
+        print("="*70)
+        print(f"\n{'Index':<8} {'Expected':<12} {'Predicted':<12} {'Error':<12}")
+        print("-" * 50)
+        
+        for i in range(min(10, len(y_test))):
+            error = abs(y_test[i] - ensemble_pred[i])
+            print(f"{i:<8} {y_test[i]:<12.2f} {ensemble_pred[i]:<12.2f} {error:<12.2f}")
         
         return ensemble_pred
 
@@ -324,5 +351,3 @@ if __name__ == "__main__":
     print("\n" + "="*70)
     print("FEDERATED LEARNING PIPELINE COMPLETED SUCCESSFULLY!")
     print("="*70)
-
-
