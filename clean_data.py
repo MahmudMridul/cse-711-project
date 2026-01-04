@@ -108,6 +108,55 @@ df.drop(
 )
 print("Dropped gender, race, ethnicity, zip_code, health_service_area, apr_medical_surgical_description")
 
-df.to_parquet("data/data_v6.parquet", index=False)
+# df.to_parquet("data/data_v6.parquet", index=False)
 
-print(df.dtypes)
+'''Dropped ccs_procedure_code, apr_drg_code as these are known after patient is discharged'''
+'''Dropped patient_disposition as we are not sure when it is assigned.
+   This maybe asssigned before discharge or after discharge.'''
+'''
+    Dropped birth_weight as most of the values are 0. Also, birth_weight is only relevant for
+    a small subset of patients (newborns).
+    Dropped abortion_edit_indicator as it is only useful for a very small subset of patients (abortions).
+'''
+'''
+    Dropped payment_typology_3 as it has 70% null values.
+'''
+
+df.drop(
+    columns=[
+        "ccs_procedure_code",
+        "apr_drg_code",
+        "patient_disposition",
+        "birth_weight",
+        "abortion_edit_indicator",
+        "payment_typology_3",
+    ],
+    axis=1,
+    inplace=True,
+)
+print("Dropped ccs_procedure_code, apr_drg_code, patient_disposition, birth_weight, abortion_edit_indicator, payment_typology_3 columns")
+
+df["payment_typology_2"] = df["payment_typology_2"].fillna("Unknown")
+print("Filled nulls in payment_typology_2 with 'Unknown'")
+
+# df.to_parquet("data/data_v7.parquet", index=False)
+
+target_hospitals = [
+    "Mount Sinai Hospital",
+    "North Shore University Hospital",
+    "New York Presbyterian Hospital - Columbia Presbyterian Center",
+    "New York Presbyterian Hospital - New York Weill Cornell Center",
+    "Montefiore Medical Center - Henry & Lucy Moses Div",
+    "Maimonides Medical Center",
+    "Long Island Jewish Medical Center",
+    "New York Methodist Hospital",
+    "Strong Memorial Hospital",
+    "Albany Medical Center Hospital"
+]
+
+target_df = df[df['facility_name'].isin(target_hospitals)].copy()
+print("Take 10 Hospitals with most records")
+
+target_df.to_parquet("data/data_v8.parquet", index=False)
+
+print(target_df.dtypes)
