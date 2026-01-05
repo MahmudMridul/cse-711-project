@@ -113,6 +113,28 @@ class FederatedClient:
             'mean_cv_score': np.mean(cv_scores),
             'std_cv_score': np.std(cv_scores)
         }
+    
+    
+    def evaluate_models(self, models_dict: Dict, X_test: np.ndarray, y_test: np.ndarray) -> Dict:
+        """Evaluate all models for this client"""
+        results = {}
+        
+        for model_type, models in models_dict.items():
+            model_results = []
+            for idx, model in enumerate(models):
+                pred = model.predict(X_test)
+                rmse = np.sqrt(mean_squared_error(y_test, pred))
+                mae = mean_absolute_error(y_test, pred)
+                r2 = r2_score(y_test, pred)
+                model_results.append({
+                    'model_index': idx + 1,
+                    'rmse': rmse,
+                    'mae': mae,
+                    'r2': r2
+                })
+            results[model_type] = model_results
+        
+        return results
 
 
 class FederatedEnsemble:
@@ -181,10 +203,10 @@ class FederatedEnsemble:
         ensemble_prediction = np.mean(all_predictions, axis=0)
         return ensemble_prediction
     
-    def evaluate_on_test(self, X_test: np.ndarray, y_test: np.ndarray):
+    def evaluate_on_test(self, X_test: np.ndarray, y_test: np.ndarray) -> Tuple[np.ndarray, Dict]:
         """Evaluate ensemble model on test data"""
         print("\n" + "="*70)
-        print("ENSEMBLE EVALUATION")
+        print("OVERALL ENSEMBLE EVALUATION")
         print("="*70)
         
         # Get predictions from each model type
@@ -200,7 +222,7 @@ class FederatedEnsemble:
         ensemble_pred = self.predict_ensemble(X_test)
         
         # Evaluate each model type
-        print("\nIndividual Model Performance:")
+        print("\nIndividual Model Type Performance:")
         for model_type, pred in predictions_by_type.items():
             rmse = np.sqrt(mean_squared_error(y_test, pred))
             mae = mean_absolute_error(y_test, pred)
@@ -213,39 +235,210 @@ class FederatedEnsemble:
         # Evaluate ensemble
         rmse = np.sqrt(mean_squared_error(y_test, ensemble_pred))
         mae = mean_absolute_error(y_test, ensemble_pred)
-        r2 = r2_score(y_test, pred)
+        r2 = r2_score(y_test, ensemble_pred)
         
-        print(f"\nENSEMBLE (Average of all models):")
+        print(f"\nOVERALL ENSEMBLE:")
         print(f"  RMSE: {rmse:.4f}")
         print(f"  MAE:  {mae:.4f}")
         print(f"  R²:   {r2:.4f}")
         
-        # Show accuracy for each individual model
+        overall_results = {
+            'ensemble_rmse': rmse,
+            'ensemble_mae': mae,
+            'ensemble_r2': r2,
+            'total_test_samples': len(y_test),
+            'num_clients': len(self.clients),
+            'num_model_types': len(self.model_types),
+            'total_models': sum(len(models) for models in self.global_models.values())
+        }
+        
+        return ensemble_pred, overall_results
+        
+        def evaluate_per_client(self, test_df: pd.DataFrame):
+            """Evaluate models on each client's test data separately"""
+            print("\n" + "="*70)
+            print("PER-CLIENT EVALUATION")
+            print("="*70)
+            
+            client_results = []
+            client_ensemble_results = []
+            individual_model_results = []
+            
+            for facility_name, client in self.clients.items():
+                print(f"\nEvaluating on {facility_name} test data...")
+                
+                # Get test data for this facility
+                facility_test = test_df[test_df['facility_name'] == facility_name].copy()
+                
+                if len(facility_test) == 0:
+                    print(f"  No test data available for {facility_name}")
+                    continue
+                
+                X_test, y_test = prepare_test_data(facility_test, client.label_encoders)
+                
+                print(f"  Test samples: {len(y_test)}")
+                
+                # Evaluate each model type
+                predictions_by_type = {}
+                for model_type in self.model_types:
+                    type_predictions = []
+                    for idx, model in enumerate(self.global_models[model_type]):
+                        pred = model.predict(X_test)
+                        type_predictions.append(pred)
+                        
+                        # Store individual model results
+                        rmse = np.sqrt(mean_squared_error(y_test, pred))
+                        mae = mean_absolute_error(y_test, pred)
+                        r2 = r2_score(y_test, pred)
+                        
+                        individual_model_results.append({
+                            'facility_name': facility_name,
+                            'model_type': model_type,
+                            'model_index': idx + 1,
+                            'rmse': rmse,
+                            'mae': mae,
+                            'r2': r2,
+                            'test_samples': len(y_test)
+                        })
+                    
+                    # Average predictions for this model type
+                    avg_pred = np.mean(type_predictions, axis=0)
+                    predictions_by_type[model_type] = avg_pred
+                    
+                    # Calculate metrics for averaged model type
+                    rmse = np.sqrt(mean_squared_error(y_test, avg_pred))
+                    mae = mean_absolute_error(y_test, avg_pred)
+                    r2 = r2_score(y_test, avg_pred)
+                    
+                    print(f"  {model_type.upper()}: RMSE={rmse:.4f}, MAE={mae:.4f}, R²={r2:.4f}")
+                
+                # Ensemble prediction (average across all model types)
+                ensemble_pred = np.mean(list(predictions_by_type.values()), axis=0)
+                
+                ensemble_rmse = np.sqrt(mean_squared_error(y_test, ensemble_pred))
+                ensemble_mae = mean_absolute_error(y_test, ensemble_pred)
+                ensemble_r2 = r2_score(y_test, ensemble_pred)
+                
+                print(f"  ENSEMBLE: RMSE={ensemble_rmse:.4f}, MAE={ensemble_mae:.4f}, R²={ensemble_r2:.4f}")
+                
+                # Store client ensemble results
+                client_ensemble_results.append({
+                    'facility_name': facility_name,
+                    'ensemble_rmse': ensemble_rmse,
+                    'ensemble_mae': ensemble_mae,
+                    'ensemble_r2': ensemble_r2,
+                    'test_samples': len(y_test)
+                })
+            
+            return individual_model_results, client_ensemble_results
+
+    def evaluate_per_client(self, test_df: pd.DataFrame):
+        """Evaluate models on each client's test data separately"""
         print("\n" + "="*70)
-        print("INDIVIDUAL MODEL ACCURACY")
+        print("PER-CLIENT EVALUATION")
         print("="*70)
         
-        for model_type in self.model_types:
-            print(f"\n{model_type.upper()} - Individual Models:")
-            for idx, model in enumerate(self.global_models[model_type]):
-                pred = model.predict(X_test)
-                rmse = np.sqrt(mean_squared_error(y_test, pred))
-                mae = mean_absolute_error(y_test, pred)
-                r2 = r2_score(y_test, pred)
-                print(f"  Model {idx+1}: RMSE={rmse:.4f}, MAE={mae:.4f}, R²={r2:.4f}")
+        client_results = []
+        client_ensemble_results = []
+        individual_model_results = []
+    
+        for facility_name, client in self.clients.items():
+            print(f"\nEvaluating on {facility_name} test data...")
+            
+            # Get test data for this facility
+            facility_test = test_df[test_df['facility_name'] == facility_name].copy()
+            
+            if len(facility_test) == 0:
+                print(f"  No test data available for {facility_name}")
+                continue
+            
+            X_test, y_test = prepare_test_data(facility_test, client.label_encoders)
+            
+            print(f"  Test samples: {len(y_test)}")
+            
+            # Evaluate each model type
+            predictions_by_type = {}
+            for model_type in self.model_types:
+                type_predictions = []
+                for idx, model in enumerate(self.global_models[model_type]):
+                    pred = model.predict(X_test)
+                    type_predictions.append(pred)
+                    
+                    # Store individual model results
+                    rmse = np.sqrt(mean_squared_error(y_test, pred))
+                    mae = mean_absolute_error(y_test, pred)
+                    r2 = r2_score(y_test, pred)
+                    
+                    individual_model_results.append({
+                        'facility_name': facility_name,
+                        'model_type': model_type,
+                        'model_index': idx + 1,
+                        'rmse': rmse,
+                        'mae': mae,
+                        'r2': r2,
+                        'test_samples': len(y_test)
+                    })
+                
+                # Average predictions for this model type
+                avg_pred = np.mean(type_predictions, axis=0)
+                predictions_by_type[model_type] = avg_pred
+                
+                # Calculate metrics for averaged model type
+                rmse = np.sqrt(mean_squared_error(y_test, avg_pred))
+                mae = mean_absolute_error(y_test, avg_pred)
+                r2 = r2_score(y_test, avg_pred)
+                
+                print(f"  {model_type.upper()}: RMSE={rmse:.4f}, MAE={mae:.4f}, R²={r2:.4f}")
+            
+            # Ensemble prediction (average across all model types)
+            ensemble_pred = np.mean(list(predictions_by_type.values()), axis=0)
+            
+            ensemble_rmse = np.sqrt(mean_squared_error(y_test, ensemble_pred))
+            ensemble_mae = mean_absolute_error(y_test, ensemble_pred)
+            ensemble_r2 = r2_score(y_test, ensemble_pred)
+            
+            print(f"  ENSEMBLE: RMSE={ensemble_rmse:.4f}, MAE={ensemble_mae:.4f}, R²={ensemble_r2:.4f}")
+            
+            # Store client ensemble results
+            client_ensemble_results.append({
+                'facility_name': facility_name,
+                'ensemble_rmse': ensemble_rmse,
+                'ensemble_mae': ensemble_mae,
+                'ensemble_r2': ensemble_r2,
+                'test_samples': len(y_test)
+            })
         
-        # Show 10 sample predictions
-        print("\n" + "="*70)
-        print("SAMPLE PREDICTIONS (First 10 Test Cases)")
-        print("="*70)
-        print(f"\n{'Index':<8} {'Expected':<12} {'Predicted':<12} {'Error':<12}")
-        print("-" * 50)
+        return individual_model_results, client_ensemble_results
+
+    def save_results_to_csv(self, individual_results: List[Dict], 
+                        client_ensemble_results: List[Dict],
+                        overall_results: Dict,
+                        output_dir: str = '.'):
+        """Save all results to CSV files"""
+        import os
         
-        for i in range(min(10, len(y_test))):
-            error = abs(y_test[i] - ensemble_pred[i])
-            print(f"{i:<8} {y_test[i]:<12.2f} {ensemble_pred[i]:<12.2f} {error:<12.2f}")
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
         
-        return ensemble_pred
+        # 1. Individual model results per client
+        df_individual = pd.DataFrame(individual_results)
+        df_individual = df_individual.sort_values(['facility_name', 'model_type', 'model_index'])
+        individual_file = os.path.join(output_dir, 'individual_model_results.csv')
+        df_individual.to_csv(individual_file, index=False)
+        print(f"\n✓ Saved individual model results to: {individual_file}")
+        
+        # 2. Ensemble results per client
+        df_client_ensemble = pd.DataFrame(client_ensemble_results)
+        df_client_ensemble = df_client_ensemble.sort_values('facility_name')
+        client_ensemble_file = os.path.join(output_dir, 'client_ensemble_results.csv')
+        df_client_ensemble.to_csv(client_ensemble_file, index=False)
+        print(f"✓ Saved client ensemble results to: {client_ensemble_file}")
+        
+        # 3. Overall ensemble results
+        df_overall = pd.DataFrame([overall_results])
+        overall_file = os.path.join(output_dir, 'overall_ensemble_results.csv')
+        df_overall.to_csv(overall_file, index=False)
+        print(f"✓ Saved overall ensemble results to: {overall_file}")
 
 def prepare_test_data(test_df: pd.DataFrame, label_encoders: Dict = None) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -340,15 +533,25 @@ if __name__ == "__main__":
     
     # Train federated models with cross-validation
     fed_ensemble.train_federated(n_splits=5)
-    
-    # Prepare test data using the first client's label encoders
+
     first_client = list(fed_ensemble.clients.values())[0]
     X_test, y_test = prepare_test_data(test_df, first_client.label_encoders)
     
     print(f"\nTest set shape: X_test={X_test.shape}, y_test={y_test.shape}")
     
-    # Make predictions and evaluate
-    predictions = fed_ensemble.evaluate_on_test(X_test, y_test)
+    # 1. Evaluate per client
+    individual_results, client_ensemble_results = fed_ensemble.evaluate_per_client(test_df)
+    
+    # 2. Evaluate overall ensemble
+    predictions, overall_results = fed_ensemble.evaluate_on_test(X_test, y_test)
+    
+    # 3. Save all results to CSV
+    fed_ensemble.save_results_to_csv(
+        individual_results,
+        client_ensemble_results,
+        overall_results,
+        output_dir='./federated_results'
+    )
     
     print("\n" + "="*70)
     print("FEDERATED LEARNING PIPELINE COMPLETED SUCCESSFULLY!")
