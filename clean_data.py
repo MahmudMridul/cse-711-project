@@ -141,6 +141,19 @@ print("Filled nulls in payment_typology_2 with 'Unknown'")
 
 # df.to_parquet("data/data_v7.parquet", index=False)
 
+# target_hospitals = [
+#     "Mount Sinai Hospital",
+#     "North Shore University Hospital",
+#     "New York Presbyterian Hospital - Columbia Presbyterian Center",
+#     "New York Presbyterian Hospital - New York Weill Cornell Center",
+#     "Montefiore Medical Center - Henry & Lucy Moses Div",
+#     "Maimonides Medical Center",
+#     "Long Island Jewish Medical Center",
+#     "New York Methodist Hospital",
+#     "Strong Memorial Hospital",
+#     "Albany Medical Center Hospital"
+# ]
+
 target_hospitals = [
     "Mount Sinai Hospital",
     "North Shore University Hospital",
@@ -151,12 +164,17 @@ target_hospitals = [
     "Long Island Jewish Medical Center",
     "New York Methodist Hospital",
     "Strong Memorial Hospital",
-    "Albany Medical Center Hospital"
+    "Albany Medical Center Hospital",
+    "University Hospital",
+    "Winthrop-University Hospital",
+    "Mount Sinai Beth Israel",
+    "NYU Hospitals Center",
+    "Staten Island University Hosp-North"
 ]
 
 target_df = df[df['facility_name'].isin(target_hospitals)].copy()
-print("Take 10 Hospitals with most records")
+print("Take 15 Hospitals with most records")
 
-target_df.to_parquet("data/data_v8.parquet", index=False)
+target_df.to_parquet("data/data_v9.parquet", index=False)
 
 print(target_df.dtypes)

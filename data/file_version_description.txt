@@ -7,3 +7,4 @@ data_v5 - dropped total_charges and total_costs
 data_v6 - dropped gender, race, ethnicity, zip_code, health_service_area, apr_medical_surgical_description
 data_v7 - dropped ccs_procedure_code, apr_drg_code, patient_disposition, birth_weight, abortion_edit_indicator, payment_typology_3
 data_v8 - take 10 hospitals with most records
+data_v9 - take 15 hospitals with most records

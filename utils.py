@@ -7,6 +7,7 @@ FILE_V5 = 'data/data_v5.parquet'
 FILE_V6 = 'data/data_v6.parquet'
 FILE_V7 = 'data/data_v7.parquet'
 FILE_V8 = 'data/data_v8.parquet'
+FILE_V9 = 'data/data_v9.parquet'
 LINE_SEPARATOR = '-' * 50
 INT_32_MAX = 2_147_483_647
 INT_32_MIN = -2_147_483_648

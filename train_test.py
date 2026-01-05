@@ -63,8 +63,8 @@ class FederatedClient:
             # Initialize model based on type
             if model_type == 'xgboost':
                 model = xgb.XGBRegressor(
-                    n_estimators=100,
-                    max_depth=6,
+                    n_estimators=200,
+                    max_depth=10,
                     learning_rate=0.1,
                     random_state=42,
                     tree_method='hist',
@@ -73,8 +73,8 @@ class FederatedClient:
                 )
             elif model_type == 'lightgbm':
                 model = lgb.LGBMRegressor(
-                    n_estimators=100,
-                    max_depth=6,
+                    n_estimators=200,
+                    max_depth=10,
                     learning_rate=0.1,
                     random_state=42,
                     device='gpu',
@@ -85,17 +85,14 @@ class FederatedClient:
                 )
             elif model_type == 'random_forest':
                 model = RandomForestRegressor(
-                    n_estimators=100,
-                    max_depth=10,
+                    n_estimators=200,
+                    max_depth=15,
                     random_state=42,
                     n_jobs=-1
                 )    
             
             # Train model
-            if model_type == 'neural_network':
-                model.fit(X_fold_train, y_fold_train, epochs=50, batch_size=64)
-            else:
-                model.fit(X_fold_train, y_fold_train)
+            model.fit(X_fold_train, y_fold_train)
             
             # Validate
             y_pred = model.predict(X_fold_val)
@@ -126,7 +123,7 @@ class FederatedEnsemble:
         self.data = data
         self.facility_column = facility_column
         self.clients = {}
-        self.model_types = ['xgboost', 'lightgbm', 'random_forest', 'neural_network']
+        self.model_types = ['xgboost', 'lightgbm', 'random_forest']
         self.global_models = {model_type: [] for model_type in self.model_types}
         print("Federated Ensemble Initialized.")
         
@@ -297,7 +294,7 @@ if __name__ == "__main__":
     
     # Load your data
     print("Loading data...")
-    df = pd.read_parquet(u.FILE_V8)
+    df = pd.read_parquet(u.FILE_V9)
     
     # Define facility names
     facility_names = [
@@ -310,7 +307,12 @@ if __name__ == "__main__":
         "Long Island Jewish Medical Center",
         "New York Methodist Hospital",
         "Strong Memorial Hospital",
-        "Albany Medical Center Hospital"
+        "Albany Medical Center Hospital",
+        "University Hospital",
+        "Winthrop-University Hospital",
+        "Mount Sinai Beth Israel",
+        "NYU Hospitals Center",
+        "Staten Island University Hosp-North"
     ]
     
     # Filter data for specified facilities only

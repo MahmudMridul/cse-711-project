@@ -15,7 +15,7 @@ pd.options.future.infer_string = True
 
 # df_base = pd.read_parquet(u.FILE_BASE)
 
-df = pd.read_parquet(u.FILE_V8)
+df = pd.read_parquet(u.FILE_V7)
 
 print("Columns and Data Types:")
 print(df.dtypes)
@@ -27,6 +27,9 @@ num_of_columns = len(df.columns)
 # print(u.LINE_SEPARATOR)
 
 number_of_rows = len(df)
+
+facility_name_count = df["facility_name"].value_counts()
+print(facility_name_count)
 
 # print(f"Number of Rows: {number_of_rows}")
 # print(u.LINE_SEPARATOR)
